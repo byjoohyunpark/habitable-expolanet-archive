@@ -1,13 +1,13 @@
-var margin = {
+let margin = {
         top: 20,
         right: 40,
         bottom: 20,
         left: 40
     },
     width = document.querySelector(".container").getBoundingClientRect().width - margin.left - margin.right,
-    height = window.innerHeight * 0.7 - margin.top - margin.bottom;
+    height = window.innerHeight * 0.65 - margin.top - margin.bottom;
 
-var svg = d3.select(".container")
+let svg = d3.select(".container")
     .append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
@@ -15,11 +15,10 @@ var svg = d3.select(".container")
     .attr("transform",
         "translate(" + margin.left + "," + margin.top + ")");
 
-d3.csv("./data.csv").then(function (data) {
-
-    var x = d3.scaleLinear()
+const init = (data) => {
+    let x = d3.scaleLinear()
         .domain(d3.extent(data, function (d) {
-            return d["P. Mean Distance (AU)"];
+            return d.st_dist;
         }))
         .range([0, width]);
     svg.append("g")
@@ -27,30 +26,40 @@ d3.csv("./data.csv").then(function (data) {
         .call(d3.axisBottom(x));
 
     // Add a scale for bubble size
-    var z = d3.scaleLinear()
-        .domain(d3.extent(data, function (d) {
-            return d["P. Radius (EU)"];
-        }))
-        .range([2, 40]);
+    //    let z = d3.scaleLinear()
+    //        .domain(d3.extent(data, function (d) {
+    //            return d.pl_radj;
+    //        }))
+    //        .range([10, 40]);
 
-    // Add dots
+    // planets
     svg.append('g')
         .selectAll("dot")
         .data(data)
         .enter()
         .append("circle")
         .attr("cx", function (d) {
-            return x(d["P. Mean Distance (AU)"]);
+            return x(d.st_dist);
         })
-        .attr("cy", height * 0.8)
+        .attr("cy", window.innerHeight / 2)
         .attr("r", function (d) {
-            return Math.random() * 20;
+            return d.pl_radj * 200;
         })
-        .style("fill", "#69b3a2")
+        .style("fill", "none")
         .style("opacity", "0.7")
         .attr("stroke", "black");
 
-});
+    // earth
+    svg.append('g')
+        .append("circle")
+        .attr("class", "earth")
+        .attr("cx", 0)
+        .attr("cy", window.innerHeight / 2)
+        .attr("r", 20)
+        .style("fill", "blue")
+        .style("opacity", "0.7")
+        .attr("stroke", "black");
+}
 
 
 const list = [
@@ -114,7 +123,7 @@ fetch('https://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?t
         return response.json();
     })
     .then(data => {
-        console.log(data);
+        //        console.log(data);
         let habitable = [];
         data.forEach((val) => {
             list.forEach(el => {
@@ -124,6 +133,7 @@ fetch('https://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?t
             });
         });
         console.log(habitable);
+        init(habitable);
 
     })
     .catch(err => {
