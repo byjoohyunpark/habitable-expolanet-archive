@@ -134,8 +134,11 @@ fetch('https://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?t
         });
         console.log(habitable);
         init(habitable);
-
     })
     .catch(err => {
         console.log(err);
     });
+
+
+
+ window.addEventListener("resize", ()=>{console.log('resized')});
