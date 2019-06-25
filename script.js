@@ -1,16 +1,17 @@
 let habitable = [];
 
 let margin = {
-        top: 20,
-        right: 100,
-        bottom: 20,
-        left: 100
-    },
-    width = document.querySelector(".container").getBoundingClientRect().width - margin.left - margin.right,
-    height = window.innerHeight * 0.65 - margin.top - margin.bottom;
+    top: 20,
+    right: 100,
+    bottom: 20,
+    left: 100
+};
+let width = document.querySelector(".container").getBoundingClientRect().width - margin.left - margin.right;
+let height = window.innerHeight * 0.65 - margin.top - margin.bottom;
 
 let svg = d3.select(".container")
     .append("svg")
+    .attr("class", "svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
     .append("g")
@@ -36,6 +37,8 @@ const init = (data) => {
     //        }))
     //        .range([10, 40]);
 
+    let radiusScaler = 200;
+
     // planets
     svg.append('g')
         .selectAll("dot")
@@ -48,7 +51,7 @@ const init = (data) => {
         })
         .attr("cy", window.innerHeight / 2)
         .attr("r", function (d) {
-            return d.pl_radj * 200;
+            return d.pl_radj * radiusScaler;
         })
         .style("fill", "none")
         .style("opacity", "0.7")
@@ -60,7 +63,7 @@ const init = (data) => {
         .attr("class", "earth")
         .attr("cx", 0)
         .attr("cy", window.innerHeight / 2)
-        .attr("r", 20)
+        .attr("r", 0.089 * radiusScaler)
         .style("fill", "blue")
         .style("opacity", "0.7")
         .attr("stroke", "black");
@@ -80,7 +83,7 @@ fetch('https://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?t
                 }
             });
         });
-//        console.log(habitable);
+        console.log(habitable);
         init(habitable);
     })
     .catch(err => {
@@ -91,6 +94,10 @@ fetch('https://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?t
 const resize = () => {
     width = document.querySelector(".container").getBoundingClientRect().width - margin.left - margin.right;
     height = window.innerHeight * 0.65 - margin.top - margin.bottom;
+
+    d3.select(".svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom);
 
     x = d3.scaleLinear()
         .domain(d3.extent(habitable, function (d) {
