@@ -1,13 +1,15 @@
 let habitable = [];
+let radiusScaler = 200;
+let maxY;
 
 let margin = {
-    top: 20,
+    top: 100,
     right: 100,
-    bottom: 20,
+    bottom: 200,
     left: 100
 };
 let width = document.querySelector(".container").getBoundingClientRect().width - margin.left - margin.right;
-let height = window.innerHeight * 0.65 - margin.top - margin.bottom;
+let height = window.innerHeight - margin.top - margin.bottom;
 
 let svg = d3.select(".container")
     .append("svg")
@@ -18,12 +20,34 @@ let svg = d3.select(".container")
     .attr("transform",
         "translate(" + margin.left + "," + margin.top + ")");
 
+svg.append("rect")
+    .attr("class", "background")
+    .attr("width", width)
+    .attr("height", height)
+    .attr("fill", "pink")
+    .on("mousemove", function (d) {
+        console.log(d3.mouse(this)[0])
+    });
+
+
 const init = (data) => {
     let x = d3.scaleLinear()
-        .domain(d3.extent(data, function (d) {
+        .domain(d3.extent(data, function(d) {
             return d.st_dist;
         }))
         .range([0, width]);
+
+     maxY = d3.max(data, function(d) {
+        return d.st_teff
+    });
+    
+    let y = d3.scaleLinear()
+        .domain([255, maxY])
+        //        .domain(d3.extent(data, function (d) {
+        //            return d.st_teff;
+        //        }))
+        .range([height, 0]);
+
 
     svg.append("g")
         .attr("transform", "translate(0," + height + ")")
@@ -37,7 +61,6 @@ const init = (data) => {
     //        }))
     //        .range([10, 40]);
 
-    let radiusScaler = 200;
 
     // planets
     svg.append('g')
@@ -49,24 +72,37 @@ const init = (data) => {
         .attr("cx", function (d) {
             return x(d.st_dist);
         })
-        .attr("cy", window.innerHeight / 2)
+        .attr("cy", function (d) {
+            return y(d.st_teff);
+        })
+        //        .attr("cy", window.innerHeight / 2)
         .attr("r", function (d) {
             return d.pl_radj * radiusScaler;
         })
-        .style("fill", "none")
+        .style("fill", "transparent")
         .style("opacity", "0.7")
-        .attr("stroke", "black");
+        .attr("stroke", "black")
+        .on("mouseover", function (d) {
+            d3.select(this).style("fill", "orange")
+        })
+        .on("mouseout", function () {
+            d3.select(this).style("fill", "transparent");
+        });
 
     // earth
     svg.append('g')
         .append("circle")
         .attr("class", "earth")
         .attr("cx", 0)
-        .attr("cy", window.innerHeight / 2)
+        .attr("cy", y(255))
+        //        .attr("cy", window.innerHeight / 2)
         .attr("r", 0.089 * radiusScaler)
         .style("fill", "blue")
         .style("opacity", "0.7")
         .attr("stroke", "black");
+
+
+
 }
 
 
@@ -93,17 +129,30 @@ fetch('https://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?t
 
 const resize = () => {
     width = document.querySelector(".container").getBoundingClientRect().width - margin.left - margin.right;
-    height = window.innerHeight * 0.65 - margin.top - margin.bottom;
+    height = window.innerHeight - margin.top - margin.bottom;
 
     d3.select(".svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom);
+
+    d3.select(".background")
+        .attr("width", width)
+        .attr("height", height);
+
 
     x = d3.scaleLinear()
         .domain(d3.extent(habitable, function (d) {
             return d.st_dist;
         }))
         .range([0, width]);
+    
+       y = d3.scaleLinear()
+        .domain([255, maxY])
+        //        .domain(d3.extent(data, function (d) {
+        //            return d.st_teff;
+        //        }))
+        .range([height, 0]);
+
 
     d3.selectAll(".axis")
         .attr("transform", "translate(0," + height + ")")
@@ -113,11 +162,15 @@ const resize = () => {
         .attr("cx", function (d) {
             return x(d.st_dist);
         })
-        .attr("cy", window.innerHeight / 2);
+        .attr("cy", function (d) {
+            return y(d.st_teff);
+        });
 
     d3.select(".earth")
         .attr("cx", 0)
-        .attr("cy", window.innerHeight / 2);
+        .attr("cy", function (d) {
+            return y(255);
+        })
 }
 
 window.addEventListener("resize", resize);
